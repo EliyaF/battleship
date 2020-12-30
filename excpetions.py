@@ -22,3 +22,10 @@ class ConnectionNotInitializedError(BattleShipException):
     A class for trying to use a connection that hasn't been initialized
     """
     pass
+
+
+class GameEnd(BattleShipException):
+    """
+    An exception for when the game is over
+    """
+    pass

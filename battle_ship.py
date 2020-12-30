@@ -11,7 +11,7 @@ changelog:
 
 from protocol_manager import ProtocolManager
 from game_manager import GameManager
-
+from excpetions import GameEnd
 
 class BattleShip:
     """
@@ -36,15 +36,17 @@ class BattleShip:
         self._game_manager.initialize_board()
         my_turn = self._protocol_manager.ready_to_start()
         game_over = False
-        while not game_over:
-            if my_turn:
-                guess = self._game_manager.get_next_guess()
-                self._protocol_manager.send_guess(guess)
-                answer = self._protocol_manager.get_guess_reply()
-                self._game_manager.set_answer(guess, answer)
-            else:
-                answer = self._game_manager.attack(self._protocol_manager.get_guess())
-                self._protocol_manager.send_guess_reply(answer)
-            if not answer[0]:
-                my_turn = not my_turn
-            game_over = answer[2]
+        try:
+            while True:
+                if my_turn:
+                    guess = self._game_manager.get_next_guess()
+                    self._protocol_manager.send_guess(guess)
+                    answer = self._protocol_manager.get_guess_reply()
+                    self._game_manager.set_answer(guess, answer)
+                else:
+                    answer = self._game_manager.attack(self._protocol_manager.get_guess())
+                    self._protocol_manager.send_guess_reply(answer)
+                if not answer[0]:
+                    my_turn = not my_turn
+        except GameEnd:
+            print("Game over!")
