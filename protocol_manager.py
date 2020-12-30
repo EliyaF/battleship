@@ -12,6 +12,7 @@ changelog:
 from tcp_connection import TcpConnection
 import struct
 from collections import namedtuple
+from excpetions import GameEnd
 
 BYTES_LEN = 9
 
@@ -58,7 +59,9 @@ class ProtocolManager:
         :rtype: tuple
         """
         guess_reply = self.unpack_message(self._tcp_connection.recv(BYTES_LEN))
-        return guess_reply.attack_answer >= 1, guess_reply.attack_answer == 2, guess_reply.game_end
+        if guess_reply.game_end:
+            raise GameEnd()
+        return guess_reply.attack_answer >= 1, guess_reply.attack_answer == 2, False
 
     def get_guess(self):
         """
@@ -68,6 +71,8 @@ class ProtocolManager:
         :rtype: tuple
         """
         guess = self.unpack_message(self._tcp_connection.recv(BYTES_LEN))
+        if guess.game_end:
+            raise GameEnd()
         return guess[3], guess[4]
 
     def send_guess_reply(self, reply: tuple):
@@ -78,7 +83,12 @@ class ProtocolManager:
         """
         self._tcp_connection.send(
             self._pack_messgae(
-                BytesDataTuple(is_attack_answer=True, attack_answer=reply[0] + reply[1], game_end=reply[2])))
+                BytesDataTuple(is_attack_answer=True, attack_answer=reply[0] + reply[1])))
+        if reply[2]:
+            self._tcp_connection.send(self._pack_messgae(BytesDataTuple(game_end=True)))
+            raise GameEnd()
+
+
 
     def ready_to_start(self):
         """
